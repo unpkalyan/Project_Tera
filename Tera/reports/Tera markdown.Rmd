@@ -1,13 +1,74 @@
 ---
-title: "Tera markdown"
+title: "Performance evaluation of Terapixel rendering"
 author: "UNPKalyan"
 date: "26/01/2021"
-output: pdf_document
+output:
+    pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
+#setting up knitr
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir= normalizePath('..'))
 ```
+
+```{r include=FALSE}
+# Load project
+library("ProjectTemplate")
+load.project()
+
+# Run code in analysis.R script
+source("src/eda.R")
+```
+
+##Introduction
+
+Terapixel pictures offer an natural, open way to show data sets to partners, permitting watchers to intuitiveness browse enormous information over different scales. The challenge we tended to here is how to provide the supercomputer scale assets required to compute a practical terapixel visualization of the city of Newcastle upon Tyne and its natural information as captured by the Newcastle Urban Observatory. Our arrangement may be a scalable engineering for cloud-based visualization that we will deploy and pay for as it were as required. The three key goals of this work are to: form a supercomputer design for adaptable visualization utilizing the open cloud; create a terapixel 3D city visualization supporting every day overhauls; embrace a rigorous assessment of cloud super-computing for compute-intensive visualization applications. We illustrate that it is possible to deliver a high-quality terapixel visualization employing a way following renderer in beneath a day utilizing open IaaS cloud G
+
+## About Data
+
+A run using the 1024 GPUs resulted in the creation of the dataset which shows the performance timing of the render application, performance of the GPU card, and the details of which part of the image of the was being rendered in each task.
+
+#### Description of variables:
+
+timestamp: time stamp at which the IoT sensor captured the data
+
+eventName: name of the event occurring within the rendering process
+
+eventType: tells whether the event starts or stop
+
+jobId & taskId: ID of the Azure batch job and task
+
+hostname: Hostname of the virtual machine auto-assigned by the Azure batch system.
+
+gpuSerial: The serial number of the physical GPU card.
+
+gpuUUID: The unique system id assigned by the Azure system to the GPU unit.
+
+powerDrawWatt: Power draw of the GPU in watts.
+
+gpuTempC: Temperature of the GPU in Celsius
+
+gpuUtilPerc: Percent utilisation of the GPU Core(s).
+
+gpuMemUtilPerc: Percent utilisation of the GPU memory.
+
+x: X co-ordinate of the image tile being rendered.
+
+y: Y co-ordinate of the image tile being rendered.
+
+level: Zoomable "google map style" map is created with 12 levels. You will only see levels 4, 8 and 12 in the data as the intermediate level are derived in the tiling process.
+
+
+
+
+
+
+
+
+
+
+
 
 ## R Markdown
 
