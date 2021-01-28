@@ -31,6 +31,11 @@ A run using the 1024 GPUs resulted in the creation of the dataset which shows th
 
 #### Description of variables:
 
+```{r}
+head(application.checkpoints)
+```
+
+
 timestamp: time stamp at which the IoT sensor captured the data
 
 eventName: name of the event occurring within the rendering process
@@ -38,6 +43,11 @@ eventName: name of the event occurring within the rendering process
 eventType: tells whether the event starts or stop
 
 jobId & taskId: ID of the Azure batch job and task
+
+
+```{r}
+head(gpu)
+```
 
 hostname: Hostname of the virtual machine auto-assigned by the Azure batch system.
 
@@ -53,6 +63,11 @@ gpuUtilPerc: Percent utilisation of the GPU Core(s).
 
 gpuMemUtilPerc: Percent utilisation of the GPU memory.
 
+
+```{r}
+head(task.x.y)
+```
+
 x: X co-ordinate of the image tile being rendered.
 
 y: Y co-ordinate of the image tile being rendered.
@@ -63,42 +78,81 @@ level: Zoomable "google map style" map is created with 12 levels. You will only 
 
 Data Preprocessing is a crucial step before proceeding with any analysis as presence of outliers, duplicate and wrong data affects the quality of the analysis' outcome.
 
-1. All the available datasets are loaded and renamed accordingly for the ease of usability.
+* All the available datasets are loaded and renamed accordingly for the ease of usability.
 
-2. Removing duplicate entries from the datasets
+* Removing duplicate entries from the datasets
 
-3. Application checkpoints dataset and Tasks dataset both are merged and used to calculate the individual run times of each event, also linking the x and y tile values with their task ids and GPUs.
+* Application checkpoints dataset and Tasks dataset both are merged and used to calculate the individual run times of each event, also linking the x and y tile values with their task ids and GPUs.
 
 
 ## Analysis of the Data
 
-The prime focus of the analysis here has been on identifying how few GPUs have performed differently with respect to rest of the bunch, with the graphical summaries supporting the argument.
+The prime focus of the analysis here has been on identifying how few GPUs have performed differently with respect to rest of the bunch, with the graphical summaries supporting the argument accordingly.
 
+1. Which event type dominates task run-times?
 
-
-
-
-
-
-
-
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
+# Event type vs Run time
+boxp
 ```
 
-## Including Plots
+The boxplot provides a strong evidence to support the argument that of all the event types, maximum run time is consumed in rendering the tiles in contrast to the events tiling, uploading and saving config adding up to only a fraction of the total run time or the total render time of the task.
 
-You can also embed plots, for example:
+2. Identifying particular GPU cards that are slower or faster than the rest of the cards?
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
+# Avg runtime per totalrender task of 1024 GPUs
+plot1
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+This scatter plot shows the average run time taken by each of the 1024 GPUs to complete one total rendering event i.e., to render, saving config, tiling and uploading of a tile at level 12. The green line at the bottom of the plot shows the fastest average run time of less than 40seconds to finish a total render task where as the red line on the top of the plot shows the highest average run time for a total render task to finish being more than 45seconds. Precise values can be seen from this next plot. It is also clear from the graph that a majority of the GPUs take about 40 or 45 seconds on average to complete one total render event.
+
+```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
+# 15 slowest and the fastest GPUs
+plot
+```
+
+The bar graph focuses only on the GPUs with the fastest and the slowest average times taken to complete the total rendering. The plot also shows the average time taken in seconds for the completion of the task with the fastest being 38.59 seconds and the slowest average being 47.07 seconds.
+
+3. What can we learn about the efficiency of the task scheduling process?
+
+```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
+# Idleness of the GPUs
+plot2
+```
+A GPU is said to be 100% efficient if its continuously under use with out being idle through out the run time, but the analysis done on the GPU dataset shows other wise, i.e., the above plot shows the GPUs being idle about 26 to 32% of their complete run time. This result has been obtained from the total runtime of each GPU and the number of instances they were found idle or woth a GPU utilisation percentage of zero.
+
+4. What can we say about the power consumption of the GPUs?
+
+```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
+# Average power consumption of the 1024 GPUs
+plot3
+```
+
+The plot shows the average power consumed by each individual GPU over the entire run time. It's clear that most of the GPUs consume an average power of around 90 watts, precisely ranging between 85 - 95 watts with very few outliers drawing more than 100 watts power.
+
+5. Overview of the Tera pixel image's rendering times.
+
+```{r echo=FALSE, fig.height=6, fig.width=8, message=FALSE, warning=FALSE}
+# Heatmap based on the total rendering time
+hm_plot
+```
+
+This heat map provides the stake holder with the basic insights as to which tiles of the image take longer time to render, which allows for a further and deeper investigation in to what variables influence this delayed render times.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

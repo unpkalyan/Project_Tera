@@ -16,16 +16,16 @@ ggsave(file.path("graphs", "Event type vs Run time.png"))
 # code to calculate the GPUs with the fastest and slowest average run-times per total render task
 avg_rt_data <- prep_data_piv2 %>% group_by(hostname) %>% filter(eventName == "TotalRender") %>% summarise(tot_runtime=sum(runtime), tasks_count = length(table(taskId)), avg_rt = tot_runtime/tasks_count)
 scplot <- avg_rt_data[order(avg_rt_data$avg_rt),]
-scplot1 <- head(scplot, n=15)
-scplot2 <- tail(scplot, n=15)
+scplot1 <- head(scplot, n=10)
+scplot2 <- tail(scplot, n=10)
 scplot_final <- rbind(scplot1, scplot2)
 scplot_final <- scplot_final %>% order_by(avg_rt)
 
 
 # Plot C -----------------------------------------------------------------------
-# scatter plot for just the fastest and slowest 15 GPUs
+# scatter plot for just the fastest and slowest 10 GPUs
 plot<- ggplot(scplot_final, aes(x =reorder(hostname, desc(-avg_rt)) , y = avg_rt)) + geom_col() + labs(title = "GPUs with the 15 least and 15 highest average task run times per Total Render", y = "Average run-time per a total render task (in seconds)", x = "GPUs") + theme(axis.text.x=element_blank()) + geom_text(aes(label=round(avg_rt, 2)))
-ggsave(file.path("graphs", "15 slowest and fastest GPUs.png"))
+ggsave(file.path("graphs", "10 slowest and fastest GPUs.png"))
 
 
 # Plot D -----------------------------------------------------------------------
