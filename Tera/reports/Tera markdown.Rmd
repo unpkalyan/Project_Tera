@@ -59,7 +59,20 @@ y: Y co-ordinate of the image tile being rendered.
 
 level: Zoomable "google map style" map is created with 12 levels. You will only see levels 4, 8 and 12 in the data as the intermediate level are derived in the tiling process.
 
+### Data Preprocessing
 
+Data Preprocessing is a crucial step before proceeding with any analysis as presence of outliers, duplicate and wrong data affects the quality of the analysis' outcome.
+
+1. All the available datasets are loaded and renamed accordingly for the ease of usability.
+
+2. Removing duplicate entries from the datasets
+
+3. Application checkpoints dataset and Tasks dataset both are merged and used to calculate the individual run times of each event, also linking the x and y tile values with their task ids and GPUs.
+
+
+## Analysis of the Data
+
+The prime focus of the analysis here has been on identifying how few GPUs have performed differently with respect to rest of the bunch, with the graphical summaries supporting the argument.
 
 
 
