@@ -1,10 +1,9 @@
-library('ProjectTemplate')
-load.project()
+
 
 # Plot A -----------------------------------------------------------------------
 # Filtering and plotting the data for the heat map of total render time
 hm_data <- prep_data_piv2%>%filter(eventName == "TotalRender")
-hm_plot <- ggplot(hm_data, aes(y, -x)) + geom_tile(aes(fill = runtime))
+hm_plot <- ggplot(hm_data, aes(y, -x)) + geom_tile(aes(fill = runtime)) + guides(fill=guide_legend(title="Total Render Time(sec)")) + labs(title="Heatmap of Total rendering times")
 ggsave(file.path("graphs", "Heatmap based on the Total Render time.png"))
 
 # Plot B -----------------------------------------------------------------------
@@ -19,7 +18,8 @@ scplot <- avg_rt_data[order(avg_rt_data$avg_rt),]
 scplot1 <- head(scplot, n=10)
 scplot2 <- tail(scplot, n=10)
 scplot_final <- rbind(scplot1, scplot2)
-scplot_final <- scplot_final %>% order_by(avg_rt)
+scplot_final <- scplot_final[order(scplot_final$avg_rt),]
+
 
 
 # Plot C -----------------------------------------------------------------------
@@ -41,7 +41,7 @@ group2$avgpwr <- round((group2$tot_pwr/group2$count), 2)
 
 # Plot E -----------------------------------------------------------------------
 # Scatter Plot to show the average power consumption of the 1024 GPUs
-plot3 <- ggplot(group2, aes(hostname, avgpwr))+geom_point()
+plot3 <- ggplot(group2, aes(hostname, avgpwr))+geom_point() + labs(title= "Average Power consumption of the 1024 GPUs", y="Average Power consumed in watts")
 ggsave(file.path("graphs", "Average Power consumption of the 1024 GPUs.png"))
 
 

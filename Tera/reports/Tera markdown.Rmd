@@ -131,6 +131,8 @@ plot3
 
 The plot shows the average power consumed by each individual GPU over the entire run time. It's clear that most of the GPUs consume an average power of around 90 watts, precisely ranging between 85 - 95 watts with very few outliers drawing more than 100 watts power.
 
+\newpage
+
 5. Overview of the Tera pixel image's rendering times.
 
 ```{r echo=FALSE, fig.height=6, fig.width=8, message=FALSE, warning=FALSE}
@@ -140,19 +142,10 @@ hm_plot
 
 This heat map provides the stake holder with the basic insights as to which tiles of the image take longer time to render, which allows for a further and deeper investigation in to what variables influence this delayed render times.
 
+## Report Reproducibility
 
+* Project template is used to pre-process the data, generate graphical summaries, and report the same.
 
+* Structure of data should be taken care before loading the project
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+* When the R markdown is run, it produces the necessary graphs and summary report based on the data.
