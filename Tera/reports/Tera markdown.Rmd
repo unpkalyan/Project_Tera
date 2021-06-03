@@ -1,7 +1,7 @@
 ---
 title: "Performance evaluation of Terapixel rendering"
-author: "UNPKalyan"
-date: "26/01/2021"
+author: "Naga Pavan Kalyan Uppu"
+date: "02/06/2021"
 output:
     pdf_document: default
 ---
@@ -21,13 +21,15 @@ load.project()
 source("src/eda.R")
 ```
 
-##Introduction
+## Introduction
 
-Terapixel pictures offer an natural, open way to show data sets to partners, permitting watchers to intuitiveness browse enormous information over different scales. The challenge we tended to here is how to provide the supercomputer scale assets required to compute a practical terapixel visualization of the city of Newcastle upon Tyne and its natural information as captured by the Newcastle Urban Observatory. Our arrangement may be a scalable engineering for cloud-based visualization that we will deploy and pay for as it were as required. The three key goals of this work are to: form a supercomputer design for adaptable visualization utilizing the open cloud; create a terapixel 3D city visualization supporting every day overhauls; embrace a rigorous assessment of cloud super-computing for compute-intensive visualization applications. We illustrate that it is possible to deliver a high-quality terapixel visualization employing a way following renderer in beneath a day utilizing open IaaS cloud G
+Terapixel pictures offer a natural, open way to show data sets to partners, permitting watchers to intuitiveness browse enormous information over different scales. The challenge addressed here is how to provide the supercomputer scale assets required to compute a practical terapixel visualization of the city of Newcastle upon Tyne and its natural information as captured by the Newcastle Urban Observatory. The arrangement may be a scalable engineering for cloud-based visualization that will deploy and pay for only as required.
 
-## About Data
+The three key goals of this work were to: form a supercomputer design for adaptable visualization utilizing the open cloud; create a terapixel 3D city visualization supporting every day overhauls; embrace a rigorous assessment of cloud super-computing for compute-intensive visualization applications. It is possible to deliver a high-quality terapixel visualization employing a way following renderer in beneath a day utilizing open IaaS, in all sort of devices irrespective of their computational power. The data associated with the image generation is used to evaluate its performance. This work is to analyse different GPUs inorder to improve the efficiency/ performance of the super computer in the image generation.
 
-A run using the 1024 GPUs resulted in the creation of the dataset which shows the performance timing of the render application, performance of the GPU card, and the details of which part of the image of the was being rendered in each task.
+## Data Description
+
+A run using the 1024 GPUs resulted in the creation of the three datasets(application.checkpoints, gpu and task.x.y) which shows the performance timing of the render application, performance of the GPU card, and the details of which part of the image was being rendered in each task.
 
 #### Description of variables:
 
@@ -35,14 +37,18 @@ A run using the 1024 GPUs resulted in the creation of the dataset which shows th
 head(application.checkpoints)
 ```
 
-
+\newpage
 timestamp: time stamp at which the IoT sensor captured the data
+
+hostname: Hostname of the virtual machine auto-assigned by the Azure batch system.
 
 eventName: name of the event occurring within the rendering process
 
 eventType: tells whether the event starts or stop
 
 jobId & taskId: ID of the Azure batch job and task
+
+There are 660400 observations about these 6 variables
 
 
 ```{r}
@@ -63,42 +69,82 @@ gpuUtilPerc: Percent utilisation of the GPU Core(s).
 
 gpuMemUtilPerc: Percent utilisation of the GPU memory.
 
+There are 1543681 observations about 8 variables - timestamp,hostname,gpuSerial, gpuUUID, powerDrawnWatt, gpuTempC, gpuUtilPerc, gpuMemUtilPerc.
 
 ```{r}
 head(task.x.y)
 ```
 
+jobId & taskId: ID of the Azure batch job and task
+
 x: X co-ordinate of the image tile being rendered.
 
 y: Y co-ordinate of the image tile being rendered.
 
-level: Zoomable "google map style" map is created with 12 levels. You will only see levels 4, 8 and 12 in the data as the intermediate level are derived in the tiling process.
+level: Zoomable "google map style" map is created with 12 levels.
+
+There are 65793 observations about these 5 variables.
 
 ### Data Preprocessing
 
-Data Preprocessing is a crucial step before proceeding with any analysis as presence of outliers, duplicate and wrong data affects the quality of the analysis' outcome.
+Data Preprocessing is a crucial step before proceeding with any analysis as presence of outliers, duplicate and wrong data affects the quality of the analysis' outcome. The preprocessing is carried out in the following steps:
 
 * All the available datasets are loaded and renamed accordingly for the ease of usability.
 
-* Removing duplicate entries from the datasets
+* Removing duplicate entries from the datasets.
 
-* Application checkpoints dataset and Tasks dataset both are merged and used to calculate the individual run times of each event, also linking the x and y tile values with their task ids and GPUs.
+* Merging the Application checkpoints dataset and task_x_y dataset data on taskId and ordering the resulting dataset.
+
+* Splitting the time stamp to calculate the run times of each task.
+
+* Linking the x and y tile values with their task ids and GPUs, which is going to map the gpu to the respective tile it renders.
+
+
+The master dataset obtained after the data preprocessing:
+```{r}
+head(prep_data_piv2)
+```
+
+#### Initial observations
+
+* All the 1024 GPUs are encoded by hostname, gpuSerial and gpuUUID
+
+* There are five events associated to each taskId.
+
+* The five different EventNames are
+a. TotalRender: Time taken by the entire task
+b. Render: Time taken by the image tile to render
+c. Saving Config: Time taken for the configuration,
+d. Tiling: Time taken for the post processing of the rendered tile
+e. Uploading: Time taken for the output from post processing to be uploaded to the Azure cloud storage.
+
+* Time stamps are logged at the start and end of each event.
+
+* The gpu variables like the utilisation, memory utilisation, power and temperature are measured for every 2 seconds during the rendering of the image.
+
+* The dataset consists of 3 levels; 4, 8 and 12 in the data as the intermediate level are derived in the tiling process. 4 being the top level and 12 being the zoomed in level.
+
+* There are a total of 65,793 tasks required to render the tera pixel image.
 
 
 ## Analysis of the Data
 
-The prime focus of the analysis here has been on identifying how few GPUs have performed differently with respect to rest of the bunch, with the graphical summaries supporting the argument accordingly.
+The prime focus of the analysis here has been on identifying how different GPUs have performed with the graphical summaries supporting the argument accordingly.
 
-1. Which event type dominates task run-times?
 
 ```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
 # Event type vs Run time
 boxp
 ```
+The above analysis employs the Box plot to represent each EventNames based on the time difference, when the particular event has completed its process. The boxplot provides a strong evidence to support the argument that of all the event types, maximum run time is consumed in rendering the tiles in contrast to the events tiling, uploading and saving config adding up to only a fraction of the total run time or the total render time of the task. The box plot shows a mean time of around 40 seconds for a  render event whereas the outliers extend to a minimum of 20 seconds to a maximum of 80 seconds. The outliers in the uploading event are considerable which shows that there are GPUs that are taking longer to upload the processed output to the azure cloud.
 
-The boxplot provides a strong evidence to support the argument that of all the event types, maximum run time is consumed in rendering the tiles in contrast to the events tiling, uploading and saving config adding up to only a fraction of the total run time or the total render time of the task.
+```{r echo=FALSE, fig.height=6, fig.width=8, message=FALSE, warning=FALSE}
+# Heatmap based on the total rendering time
+hm_plot
+```
 
-2. Identifying particular GPU cards that are slower or faster than the rest of the cards?
+This heat map provides the stake holder with the basic insights as to which tiles of the image take longer time to render, which allows for a further and deeper investigation in to what variables influence this delayed render times.
+
 
 ```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
 # Avg runtime per totalrender task of 1024 GPUs
@@ -108,21 +154,11 @@ plot1
 This scatter plot shows the average run time taken by each of the 1024 GPUs to complete one total rendering event i.e., to render, saving config, tiling and uploading of a tile at level 12. The green line at the bottom of the plot shows the fastest average run time of less than 40seconds to finish a total render task where as the red line on the top of the plot shows the highest average run time for a total render task to finish being more than 45seconds. Precise values can be seen from this next plot. It is also clear from the graph that a majority of the GPUs take about 40 or 45 seconds on average to complete one total render event.
 
 ```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
-# 15 slowest and the fastest GPUs
+# 10 slowest and the fastest GPUs
 plot
 ```
 
-The bar graph focuses only on the GPUs with the fastest and the slowest average times taken to complete the total rendering. The plot also shows the average time taken in seconds for the completion of the task with the fastest being 38.59 seconds and the slowest average being 47.07 seconds.
-
-3. What can we learn about the efficiency of the task scheduling process?
-
-```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
-# Idleness of the GPUs
-plot2
-```
-A GPU is said to be 100% efficient if its continuously under use with out being idle through out the run time, but the analysis done on the GPU dataset shows other wise, i.e., the above plot shows the GPUs being idle about 26 to 32% of their complete run time. This result has been obtained from the total runtime of each GPU and the number of instances they were found idle or woth a GPU utilisation percentage of zero.
-
-4. What can we say about the power consumption of the GPUs?
+The bar graph focuses only on the GPUs with the fastest and the slowest average times taken to complete the total rendering. The plot also shows the average time taken in seconds for the completion of the task with the fastest being 38 seconds and the slowest average being 47 seconds.
 
 ```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
 # Average power consumption of the 1024 GPUs
@@ -131,21 +167,42 @@ plot3
 
 The plot shows the average power consumed by each individual GPU over the entire run time. It's clear that most of the GPUs consume an average power of around 90 watts, precisely ranging between 85 - 95 watts with very few outliers drawing more than 100 watts power.
 
-\newpage
-
-5. Overview of the Tera pixel image's rendering times.
-
-```{r echo=FALSE, fig.height=6, fig.width=8, message=FALSE, warning=FALSE}
-# Heatmap based on the total rendering time
-hm_plot
+```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
+# Idleness of the GPUs
+plot2
 ```
+A GPU is said to be 100% efficient if its continuously under use with out being idle through out the run time, but the analysis done on the GPU dataset shows other wise, i.e., the above plot shows the GPUs being idle about 26 to 32% of their complete run time. This result has been obtained from the total runtime of each GPU and the number of instances they were found idle or with a GPU utilisation percentage of zero.
 
-This heat map provides the stake holder with the basic insights as to which tiles of the image take longer time to render, which allows for a further and deeper investigation in to what variables influence this delayed render times.
+## Business Solution
 
-## Report Reproducibility
+The aim of this project was to analyse the available data and propose ways to improve the efficiency of the supercomputer in rendering the terapixel image. The results suggest focus to be put on two areas: power consumption and idleness.
+
+* Replacing the GPUs that consume high power effectively improves the efficiency of the super computer in rendering the tera pixel.
+
+Idleness is a key factor to be taken into consideration when dealing with processors. Having a high idle time refers to squandering of valuable computing resources.
+
+* The results suggest that there is a great need in improving the task scheduling process of the super computer as 26% - 32% of idleness is a wastage of great deal of the computing power.
+
+## Reproducibility
 
 * Project template is used to pre-process the data, generate graphical summaries, and report the same.
 
 * Structure of data should be taken care before loading the project
 
 * When the R markdown is run, it produces the necessary graphs and summary report based on the data.
+
+## Points to focus
+
+In addition to the above analysis, further investigation can be launched into the following aspects:
+
+* The huge time difference in the mean uploading time and its outliers.
+
+* The factors influencing variable render times for different tiles.
+
+* The relation between the GPU power consumption and temperature.
+
+* All the 1024 GPUs forming two large clusters(around 40 and 45 seconds) in the average task run times per total render task.
+
+## Conclusion
+
+The data shows that the super computer rendering a tera pixel image compatible for viewing in any device irrespective of its computational power requires high energy. To improve the efficiency of this super computer, the primary focus should be on improving the task scheduler which directly influences the efficiency of the super computer.
