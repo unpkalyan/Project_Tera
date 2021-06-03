@@ -8,7 +8,7 @@ ggsave(file.path("graphs", "Heatmap based on the Total Render time.png"))
 
 # Plot B -----------------------------------------------------------------------
 #box plot code to show which event type dominates the run-time
-boxp = ggplot(prep_data_piv2, aes(y= runtime, fill = eventName)) + geom_boxplot()
+boxp = ggplot(prep_data_piv2, aes(y= runtime, fill = eventName)) + geom_boxplot() + labs(title = "Boxplot of event types", y = "Run-time", x = "Events")
 ggsave(file.path("graphs", "Event type vs Run time.png"))
 
 
@@ -24,7 +24,7 @@ scplot_final <- scplot_final[order(scplot_final$avg_rt),]
 
 # Plot C -----------------------------------------------------------------------
 # scatter plot for just the fastest and slowest 10 GPUs
-plot<- ggplot(scplot_final, aes(x =reorder(hostname, desc(-avg_rt)) , y = avg_rt)) + geom_col() + labs(title = "GPUs with the 15 least and 15 highest average task run times per Total Render", y = "Average run-time per a total render task (in seconds)", x = "GPUs") + theme(axis.text.x=element_blank()) + geom_text(aes(label=round(avg_rt, 2)))
+plot<- ggplot(scplot_final, aes(x =reorder(hostname, desc(-avg_rt)) , y = avg_rt)) + geom_col() + labs(title = "10 slowest & fastest GPUs - avg-taskrun time/Total Render", y = "Average run-time per a total render task (in seconds)", x = "GPUs") + theme(axis.text.x=element_blank())
 ggsave(file.path("graphs", "10 slowest and fastest GPUs.png"))
 
 
